@@ -8,6 +8,39 @@ st.set_page_config(
     layout="centered"
 )
 
+# 다크모드 감지 및 유저 버블 스타일 정의 (JavaScript + CSS)
+user_bubble_css = """
+<style>
+/* 공통 유저버블 스타일 */
+.chat-bubble {
+    padding: 0.75rem 1rem;
+    margin: 0.5rem 0;
+    border-radius: 12px;
+    font-size: 1rem;
+    max-width: 90%;
+}
+
+/* 라이트모드용 스타일 */
+@media (prefers-color-scheme: light) {
+    .chat-bubble {
+        background-color: #f0f0f0;
+        color: #000000;
+    }
+}
+
+/* 다크모드용 스타일 */
+@media (prefers-color-scheme: dark) {
+    .chat-bubble {
+        background-color: #ffffff;
+        color: #000000;
+    }
+}
+</style>
+"""
+
+# CSS 삽입
+st.markdown(user_bubble_css, unsafe_allow_html=True)
+
 # 커스텀 CSS 스타일
 st.markdown("""
 <style>
@@ -44,6 +77,11 @@ st.markdown("""
         border-radius: 15px;
         margin-bottom: 1rem;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    @media (prefers-color-scheme: dark) {
+        .chat-bubble {
+            color: black; /* 다크 모드일 때 사용자 메시지 텍스트를 검정색으로 */
+        }
     }
     .stButton>button {
         background-color: #7B2CBF;
@@ -277,7 +315,23 @@ with shared_tab:
             st.markdown("---")
             st.markdown(f"**고민:** {solution['고민']}")
             st.markdown("**해결책:**")
-            st.markdown(solution['해결책'])
+
+            full_solution_text = solution['해결책']
+            
+            # 해결책 요약본 생성
+            lines = full_solution_text.splitlines()
+            summary_lines = lines[:3]  # 처음 3줄 가져오기
+            summary_text = "\n".join(summary_lines)
+
+            # 요약본이 너무 길 경우 처리 (200자 제한)
+            if len(summary_text) > 200 and len(lines) > 3:
+                summary_text = full_solution_text[:200] + "..."
+            elif len(summary_text) < len(full_solution_text):
+                summary_text += "..."  # 요약된 경우 말줄임표 추가
+
+            # expander를 사용하여 전체 해결책 표시
+            with st.expander(f"요약: {summary_text.splitlines()[0] if summary_text else '해결책 보기'} (클릭해서 전체보기)"):
+                st.markdown(full_solution_text)
             
             # 해결책의 피드백 상태 초기화
             if i not in st.session_state.solution_feedback:
@@ -301,5 +355,3 @@ with shared_tab:
             ):
                 st.session_state.solution_feedback[i]['dislikes'] += 1
                 st.rerun()
-
-
