@@ -94,6 +94,8 @@ if "conversation_stage" not in st.session_state:
     st.session_state.conversation_stage = 0
 if "user_original_problem" not in st.session_state:
     st.session_state.user_original_problem = ""
+if "solution_feedback" not in st.session_state:
+    st.session_state.solution_feedback = {}
 
 # 탭 생성
 solve_tab, shared_tab = st.tabs(["고민 해결하기", "공유된 해결책"])
@@ -271,9 +273,33 @@ with shared_tab:
     if not st.session_state.shared_solutions:
         st.info("아직 공유된 해결책이 없습니다. 첫 번째 탭에서 고민을 해결하고 공유해보세요!")
     else:
-        for solution in st.session_state.shared_solutions:
+        for i, solution in enumerate(st.session_state.shared_solutions):
             st.markdown("---")
             st.markdown(f"**고민:** {solution['고민']}")
             st.markdown("**해결책:**")
             st.markdown(solution['해결책'])
+            
+            # 해결책의 피드백 상태 초기화
+            if i not in st.session_state.solution_feedback:
+                st.session_state.solution_feedback[i] = {"likes": 0, "dislikes": 0}
+            
+            # 공감/비공감 버튼 및 카운트 표시
+            col1, col2, col3, col4 = st.columns([1, 1, 0.5, 0.5])
+            
+            # 공감 버튼
+            if col1.button(
+                f"👍 공감 ({st.session_state.solution_feedback[i]['likes']})", 
+                key=f"like_{i}"
+            ):
+                st.session_state.solution_feedback[i]['likes'] += 1
+                st.rerun()
+            
+            # 비공감 버튼
+            if col2.button(
+                f"👎 비공감 ({st.session_state.solution_feedback[i]['dislikes']})", 
+                key=f"dislike_{i}"
+            ):
+                st.session_state.solution_feedback[i]['dislikes'] += 1
+                st.rerun()
+
 
